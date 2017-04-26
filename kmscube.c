@@ -43,7 +43,7 @@ static const struct egl *egl;
 static const struct gbm *gbm;
 static const struct drm *drm;
 
-static const char *shortopts = "AD:M:m:V:";
+static const char *shortopts = "AD:M:m:V:S";
 
 static const struct option longopts[] = {
 	{"atomic", no_argument,       0, 'A'},
@@ -51,12 +51,13 @@ static const struct option longopts[] = {
 	{"mode",   required_argument, 0, 'M'},
 	{"modifier", required_argument, 0, 'm'},
 	{"video",  required_argument, 0, 'V'},
+	{"synced-playback", no_argument, 0, 'S'},
 	{0, 0, 0, 0}
 };
 
 static void usage(const char *name)
 {
-	printf("Usage: %s [-ADMmV]\n"
+	printf("Usage: %s [-ADMmVS]\n"
 			"\n"
 			"options:\n"
 			"    -A, --atomic             use atomic modesetting and fencing\n"
@@ -67,7 +68,10 @@ static void usage(const char *name)
 			"        nv12-2img -  yuv textured (color conversion in shader)\n"
 			"        nv12-1img -  yuv textured (single nv12 texture)\n"
 			"    -m, --modifier=MODIFIER  hardcode the selected modifier\n"
-			"    -V, --video=FILE         video textured cube\n",
+			"    -V, --video=FILE         video textured cube\n"
+			"    -S, --synced-playback    make sure playback stays in sync\n"
+			"                             with the timestamps in the video;\n"
+			"                             this drops frames if necessary\n",
 			name);
 }
 
@@ -78,6 +82,7 @@ int main(int argc, char *argv[])
 	enum mode mode = SMOOTH;
 	uint64_t modifier = DRM_FORMAT_MOD_INVALID;
 	int atomic = 0;
+	int synced_playback = 0;
 	int opt;
 
 #ifdef HAVE_GST
@@ -115,6 +120,9 @@ int main(int argc, char *argv[])
 			mode = VIDEO;
 			video = optarg;
 			break;
+		case 'S':
+			synced_playback = 1;
+			break;
 		default:
 			usage(argv[0]);
 			return -1;
@@ -140,7 +148,7 @@ int main(int argc, char *argv[])
 	if (mode == SMOOTH)
 		egl = init_cube_smooth(gbm);
 	else if (mode == VIDEO)
-		egl = init_cube_video(gbm, video);
+		egl = init_cube_video(gbm, video, synced_playback);
 	else
 		egl = init_cube_tex(gbm, mode);
 

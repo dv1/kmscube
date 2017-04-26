@@ -102,17 +102,17 @@ const struct egl * init_cube_tex(const struct gbm *gbm, enum mode mode);
 #ifdef HAVE_GST
 
 struct decoder;
-struct decoder * video_init(const struct egl *egl, const struct gbm *gbm, const char *filename);
+struct decoder * video_init(const struct egl *egl, const struct gbm *gbm, const char *filename, int synced_playback);
 EGLImage video_frame(struct decoder *dec);
 void video_deinit(struct decoder *dec);
 
-const struct egl * init_cube_video(const struct gbm *gbm, const char *video);
+const struct egl * init_cube_video(const struct gbm *gbm, const char *video, int synced_playback);
 
 #else
 static inline const struct egl *
-init_cube_video(const struct gbm *gbm, const char *video)
+init_cube_video(const struct gbm *gbm, const char *video, int synced_playback)
 {
-	(void)gbm; (void)video;
+	(void)gbm; (void)video; (void)synced_playback;
 	printf("no GStreamer support!\n");
 	return NULL;
 }

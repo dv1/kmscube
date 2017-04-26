@@ -253,7 +253,7 @@ appsink_query_cb(GstPad *pad G_GNUC_UNUSED, GstPadProbeInfo *info,
 }
 
 struct decoder *
-video_init(const struct egl *egl, const struct gbm *gbm, const char *filename)
+video_init(const struct egl *egl, const struct gbm *gbm, const char *filename, int synced_playback)
 {
 	struct decoder *dec;
 	GstElement *src, *decodebin;
@@ -267,7 +267,7 @@ video_init(const struct egl *egl, const struct gbm *gbm, const char *filename)
 
 	/* Setup pipeline: */
 	static const char *pipeline =
-		"filesrc name=\"src\" ! decodebin name=\"decode\" ! video/x-raw ! appsink sync=false name=\"sink\"";
+		"filesrc name=\"src\" ! decodebin name=\"decode\" ! video/x-raw ! appsink name=\"sink\"";
 	dec->pipeline = gst_parse_launch(pipeline, NULL);
 
 	dec->sink = gst_bin_get_by_name(GST_BIN(dec->pipeline), "sink");
@@ -294,6 +294,7 @@ video_init(const struct egl *egl, const struct gbm *gbm, const char *filename)
 	 * vsync and quickly chew up 100's of MB of buffers:
 	 */
 	g_object_set(G_OBJECT(dec->sink), "max-buffers", 2, NULL);
+	g_object_set(G_OBJECT(dec->sink), "sync", (gboolean)(!!synced_playback), NULL);
 
 	gst_pad_add_probe(gst_element_get_static_pad(dec->sink, "sink"),
 			GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,

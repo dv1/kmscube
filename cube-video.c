@@ -49,6 +49,7 @@ struct {
 	struct decoder *decoder;
 	int filenames_count, idx;
 	const char *filenames[32];
+	int synced_playback;
 } gl;
 
 static const struct egl *egl = &gl.egl;
@@ -230,7 +231,7 @@ static void draw_cube_video(unsigned i)
 		glGenTextures(1, &gl.tex);
 		video_deinit(gl.decoder);
 		gl.idx = (gl.idx + 1) % gl.filenames_count;
-		gl.decoder = video_init(&gl.egl, gl.gbm, gl.filenames[gl.idx]);
+		gl.decoder = video_init(&gl.egl, gl.gbm, gl.filenames[gl.idx], gl.synced_playback);
 	}
 
 	glUseProgram(gl.blit_program);
@@ -291,7 +292,7 @@ static void draw_cube_video(unsigned i)
 	glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
 }
 
-const struct egl * init_cube_video(const struct gbm *gbm, const char *filenames)
+const struct egl * init_cube_video(const struct gbm *gbm, const char *filenames, int synced_playback)
 {
 	char *fnames, *s;
 	int ret, i = 0;
@@ -305,6 +306,8 @@ const struct egl * init_cube_video(const struct gbm *gbm, const char *filenames)
 		return NULL;
 	}
 
+	gl.synced_playback = synced_playback;
+
 	fnames = strdup(filenames);
 	while ((s = strstr(fnames, ","))) {
 		gl.filenames[i] = fnames;
@@ -315,7 +318,7 @@ const struct egl * init_cube_video(const struct gbm *gbm, const char *filenames)
 	gl.filenames[i] = fnames;
 	gl.filenames_count = ++i;
 
-	gl.decoder = video_init(&gl.egl, gbm, gl.filenames[gl.idx]);
+	gl.decoder = video_init(&gl.egl, gbm, gl.filenames[gl.idx], synced_playback);
 	if (!gl.decoder) {
 		printf("cannot create video decoder\n");
 		return NULL;
